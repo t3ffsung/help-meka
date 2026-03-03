@@ -23,9 +23,20 @@ h1 {
 
 .upload-box {
   display: flex;
-  gap: 20px;
+  gap: 40px;
   justify-content: center;
   margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.upload-section {
+  text-align: center;
+}
+
+.upload-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .preview-grid {
@@ -73,6 +84,10 @@ button {
   background: black;
   color: white;
   cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
 }
 
 .progress-container {
