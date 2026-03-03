@@ -8,9 +8,6 @@ async function generatePDF() {
         return;
     }
 
-    // Keep original selection order
-    files.sort((a, b) => a.lastModified - b.lastModified);
-
     let pdf;
     let pageWidth;
     let pageHeight;
@@ -18,8 +15,7 @@ async function generatePDF() {
     for (let i = 0; i < files.length; i++) {
 
         const imgData = await readFileAsDataURL(files[i]);
-        const croppedData = await cropBlackBorders(imgData);
-
+        const croppedData = await smartCrop(imgData);
         const img = await loadImage(croppedData);
 
         if (i === 0) {
@@ -36,19 +32,7 @@ async function generatePDF() {
                 pageWidth > pageHeight ? "l" : "p");
         }
 
-        // Scale image to fit SAME page size
-        const ratio = Math.min(
-            pageWidth / img.width,
-            pageHeight / img.height
-        );
-
-        const imgWidth = img.width * ratio;
-        const imgHeight = img.height * ratio;
-
-        const x = (pageWidth - imgWidth) / 2;
-        const y = (pageHeight - imgHeight) / 2;
-
-        pdf.addImage(img, "JPEG", x, y, imgWidth, imgHeight);
+        pdf.addImage(img, "JPEG", 0, 0, pageWidth, pageHeight);
     }
 
     pdf.save("converted.pdf");
@@ -74,7 +58,9 @@ function loadImage(src) {
 }
 
 
-function cropBlackBorders(imageData) {
+/* ---------------- SMART CROP ---------------- */
+
+function smartCrop(imageData) {
     return new Promise(resolve => {
         const img = new Image();
         img.src = imageData;
@@ -92,44 +78,47 @@ function cropBlackBorders(imageData) {
             const imageDataObj = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageDataObj.data;
 
-            let top = 0, bottom = canvas.height, left = 0, right = canvas.width;
+            const width = canvas.width;
+            const height = canvas.height;
 
-            function isBlackRow(y) {
-                for (let x = 0; x < canvas.width; x++) {
-                    const index = (y * canvas.width + x) * 4;
-                    if (data[index] > 25 || data[index + 1] > 25 || data[index + 2] > 25)
-                        return false;
+            let top = 0;
+            let bottom = height;
+
+            function isMostlyDarkRow(y) {
+                let darkPixels = 0;
+
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+
+                    const brightness = (r + g + b) / 3;
+
+                    if (brightness < 60) {
+                        darkPixels++;
+                    }
                 }
-                return true;
+
+                return darkPixels > width * 0.9; 
             }
 
-            function isBlackColumn(x) {
-                for (let y = 0; y < canvas.height; y++) {
-                    const index = (y * canvas.width + x) * 4;
-                    if (data[index] > 25 || data[index + 1] > 25 || data[index + 2] > 25)
-                        return false;
-                }
-                return true;
-            }
+            while (top < bottom && isMostlyDarkRow(top)) top++;
+            while (bottom > top && isMostlyDarkRow(bottom - 1)) bottom--;
 
-            while (top < bottom && isBlackRow(top)) top++;
-            while (bottom > top && isBlackRow(bottom - 1)) bottom--;
-            while (left < right && isBlackColumn(left)) left++;
-            while (right > left && isBlackColumn(right - 1)) right--;
-
-            const newWidth = right - left;
             const newHeight = bottom - top;
 
             const croppedCanvas = document.createElement("canvas");
             const croppedCtx = croppedCanvas.getContext("2d");
 
-            croppedCanvas.width = newWidth;
+            croppedCanvas.width = width;
             croppedCanvas.height = newHeight;
 
             croppedCtx.drawImage(
                 canvas,
-                left, top, newWidth, newHeight,
-                0, 0, newWidth, newHeight
+                0, top, width, newHeight,
+                0, 0, width, newHeight
             );
 
             resolve(croppedCanvas.toDataURL("image/jpeg", 1.0));
