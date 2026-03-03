@@ -14,8 +14,17 @@
   <p class="tagline">Fast. Smart. Unlimited. No uploads.</p>
 
   <div class="upload-box">
-    <input type="file" id="imageInput" multiple accept="image/*">
-    <input type="file" id="existingPdf" accept="application/pdf">
+
+    <div class="upload-section">
+      <label class="upload-label">Select Images</label>
+      <input type="file" id="imageInput" multiple accept="image/*">
+    </div>
+
+    <div class="upload-section">
+      <label class="upload-label">Upload Existing PDF (Optional)</label>
+      <input type="file" id="existingPdf" accept="application/pdf">
+    </div>
+
   </div>
 
   <div id="preview" class="preview-grid"></div>
