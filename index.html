@@ -11,30 +11,27 @@
 <div class="app">
 
   <h1>Image to PDF Pro</h1>
-  <p class="tagline">Fast. Smart. Unlimited. No uploads.</p>
+  <p class="tagline">Drag. Insert. Reorder. Smart Crop.</p>
 
   <div class="upload-box">
-
-    <div class="upload-section">
-      <label class="upload-label">Select Images</label>
+    <div>
+      <label>Select Images</label>
       <input type="file" id="imageInput" multiple accept="image/*">
     </div>
 
-    <div class="upload-section">
-      <label class="upload-label">Upload Existing PDF (Optional)</label>
+    <div>
+      <label>Upload Existing PDF (Optional)</label>
       <input type="file" id="existingPdf" accept="application/pdf">
     </div>
-
   </div>
 
-  <div id="preview" class="preview-grid"></div>
+  <h3>Pages Preview (Drag Images Between Pages)</h3>
+  <div id="pagesContainer" class="pages-container"></div>
 
   <div class="controls">
-    <button onclick="generatePDF()">Convert to PDF</button>
-    <button onclick="clearImages()">Clear All</button>
-    <button id="downloadBtn" style="display:none;" onclick="downloadPDF()">
-      Download PDF
-    </button>
+    <button onclick="generatePDF()">Generate PDF</button>
+    <button onclick="clearAll()">Clear All</button>
+    <button id="downloadBtn" style="display:none;" onclick="downloadPDF()">Download PDF</button>
   </div>
 
   <div class="progress-container">
@@ -43,7 +40,6 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="script.js"></script>
 
