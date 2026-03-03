@@ -196,7 +196,7 @@ function smartCrop(dataUrl) {
           const i = (y * canvas.width + x) * 4;
           if ((data[i] + data[i+1] + data[i+2]) / 3 < 65) dark++;
         }
-        return dark > canvas.width * 0.92;
+        return dark > canvas.width * 0.70;
       };
 
       while (top < bottom && isDarkRow(top)) top++;
