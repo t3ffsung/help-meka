@@ -1,99 +1,136 @@
+// Initialize PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
 let pages = [];
-let existingPdfBytes = null;
+let sourcePdfs = []; // Stores { id, bytes } to handle multiple PDFs
 let generatedUrl = null;
+let draggedIndex = null;
 
 const container = document.getElementById("pagesContainer");
 const progressBar = document.getElementById("progressBar");
 const downloadBtn = document.getElementById("downloadBtn");
+const cropToggle = document.getElementById("enableCrop");
 
 /* ---------------- IMAGE UPLOAD ---------------- */
-
 document.getElementById("imageInput").addEventListener("change", async e => {
   const files = Array.from(e.target.files);
-
   for (let file of files) {
-    const cropped = await smartCropFile(file);
-    pages.push({ type: "image", data: cropped });
+    let dataUrl = await readFileAsDataURL(file);
+    if (cropToggle.checked) dataUrl = await smartCrop(dataUrl);
+    pages.push({ type: "image", data: dataUrl });
   }
-
   renderPages();
   e.target.value = "";
 });
 
-/* ---------------- PDF UPLOAD ---------------- */
+function readFileAsDataURL(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
 
+/* ---------------- PDF UPLOAD & THUMBNAILS ---------------- */
 document.getElementById("existingPdf").addEventListener("change", async e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files);
+  for (let file of files) {
+    const bytes = await file.arrayBuffer();
+    const pdfId = sourcePdfs.length;
+    sourcePdfs.push({ id: pdfId, bytes: bytes });
 
-  existingPdfBytes = await file.arrayBuffer();
-  const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-  const total = pdfDoc.getPageCount();
-
-  for (let i = 0; i < total; i++) {
-    pages.push({ type: "pdf", index: i });
+    // Generate Thumbnails via PDF.js
+    const loadingTask = pdfjsLib.getDocument({ data: bytes });
+    const pdf = await loadingTask.promise;
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 0.5 });
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+      
+      pages.push({ 
+        type: "pdf", 
+        pdfId: pdfId, 
+        pageIndex: i - 1, 
+        thumb: canvas.toDataURL("image/jpeg") 
+      });
+    }
   }
-
   renderPages();
+  e.target.value = "";
 });
 
-/* ---------------- RENDER ---------------- */
-
+/* ---------------- RENDER & DRAG ---------------- */
 function renderPages() {
   container.innerHTML = "";
-
   pages.forEach((item, index) => {
     const div = document.createElement("div");
     div.className = "page-slot";
     div.draggable = true;
     div.dataset.index = index;
 
-    if (item.type === "image") {
-      const img = document.createElement("img");
-      img.src = item.data;
-      div.appendChild(img);
-    } else {
-      div.innerHTML = `<span>PDF Page ${item.index + 1}</span>`;
-    }
+    const img = document.createElement("img");
+    img.src = item.type === "image" ? item.data : item.thumb;
+    div.appendChild(img);
+
+    const badge = document.createElement("span");
+    badge.className = "page-badge";
+    badge.innerText = item.type === "image" ? `Img ${index+1}` : `PDF P.${item.pageIndex + 1}`;
+    div.appendChild(badge);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "delete-btn";
+    delBtn.innerHTML = "✕";
+    delBtn.onclick = () => { pages.splice(index, 1); renderPages(); };
+    div.appendChild(delBtn);
 
     addDrag(div);
     container.appendChild(div);
   });
 }
 
-/* ---------------- DRAG ---------------- */
-
 function addDrag(el) {
   el.addEventListener("dragstart", e => {
-    e.dataTransfer.setData("text", el.dataset.index);
+    draggedIndex = parseInt(el.dataset.index);
+    setTimeout(() => el.style.opacity = "0.5", 0);
   });
-
-  el.addEventListener("dragover", e => e.preventDefault());
-
+  el.addEventListener("dragend", () => el.style.opacity = "1");
+  el.addEventListener("dragover", e => {
+    e.preventDefault();
+    el.classList.add("drag-over");
+  });
+  el.addEventListener("dragleave", () => el.classList.remove("drag-over"));
   el.addEventListener("drop", e => {
     e.preventDefault();
-    const from = e.dataTransfer.getData("text");
-    const to = el.dataset.index;
-
-    const moved = pages.splice(from, 1)[0];
-    pages.splice(to, 0, moved);
+    el.classList.remove("drag-over");
+    const targetIndex = parseInt(el.dataset.index);
+    if (draggedIndex === targetIndex) return;
+    
+    const movedItem = pages.splice(draggedIndex, 1)[0];
+    pages.splice(targetIndex, 0, movedItem);
     renderPages();
   });
 }
 
-/* ---------------- GENERATE ---------------- */
-
+/* ---------------- GENERATE PDF ---------------- */
 async function generatePDF() {
   if (pages.length === 0) return;
-
   progressBar.style.width = "0%";
   downloadBtn.style.display = "none";
 
   const pdfDoc = await PDFLib.PDFDocument.create();
-
-  let sourcePdf = null;
-  if (existingPdfBytes) {
-    sourcePdf = await PDFLib.PDFDocument.load(existingPdfBytes);
+  
+  // Pre-load necessary PDFs
+  const loadedPdfDocs = {};
+  for (let item of pages) {
+    if (item.type === "pdf" && !loadedPdfDocs[item.pdfId]) {
+      loadedPdfDocs[item.pdfId] = await PDFLib.PDFDocument.load(sourcePdfs[item.pdfId].bytes);
+    }
   }
 
   for (let i = 0; i < pages.length; i++) {
@@ -101,111 +138,76 @@ async function generatePDF() {
 
     if (item.type === "image") {
       const imageBytes = await fetch(item.data).then(res => res.arrayBuffer());
-
-      let img;
-      try {
-        img = await pdfDoc.embedJpg(imageBytes);
-      } catch {
-        img = await pdfDoc.embedPng(imageBytes);
-      }
-
+      let img = item.data.includes("image/png") ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
       const { width, height } = img.scale(1);
       const page = pdfDoc.addPage([width, height]);
       page.drawImage(img, { x: 0, y: 0, width, height });
 
-    } else if (item.type === "pdf" && sourcePdf) {
-
-      const [copiedPage] = await pdfDoc.copyPages(sourcePdf, [item.index]);
+    } else if (item.type === "pdf") {
+      const sourceDoc = loadedPdfDocs[item.pdfId];
+      const [copiedPage] = await pdfDoc.copyPages(sourceDoc, [item.pageIndex]);
       pdfDoc.addPage(copiedPage);
-
     }
-
     progressBar.style.width = ((i + 1) / pages.length) * 100 + "%";
   }
 
   const bytes = await pdfDoc.save();
   const blob = new Blob([bytes], { type: "application/pdf" });
 
+  // Fix Memory Leak
+  if (generatedUrl) URL.revokeObjectURL(generatedUrl);
   generatedUrl = URL.createObjectURL(blob);
   downloadBtn.style.display = "inline-block";
 }
 
-/* ---------------- DOWNLOAD ---------------- */
-
 function downloadPDF() {
   if (!generatedUrl) return;
-
   const link = document.createElement("a");
   link.href = generatedUrl;
-  link.download = "converted.pdf";
-  document.body.appendChild(link);
+  link.download = "Pro_Converted.pdf";
   link.click();
-  document.body.removeChild(link);
 }
-
-/* ---------------- CLEAR ---------------- */
 
 function clearAll() {
   pages = [];
-  existingPdfBytes = null;
+  sourcePdfs = [];
   container.innerHTML = "";
   progressBar.style.width = "0%";
   downloadBtn.style.display = "none";
 }
 
 /* ---------------- SMART CROP ---------------- */
-
-function smartCropFile(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => smartCrop(e.target.result).then(resolve);
-    reader.readAsDataURL(file);
-  });
-}
-
 function smartCrop(dataUrl) {
   return new Promise(resolve => {
     const img = new Image();
     img.src = dataUrl;
-
-    img.onload = function () {
+    img.onload = () => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-
-      canvas.width = img.width;
-      canvas.height = img.height;
+      canvas.width = img.width; canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
 
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let top = 0, bottom = canvas.height;
 
-      let top = 0;
-      let bottom = canvas.height;
-
-      function isDarkRow(y) {
+      const isDarkRow = y => {
         let dark = 0;
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
-          const brightness = (data[i] + data[i+1] + data[i+2]) / 3;
-          if (brightness < 65) dark++;
+          if ((data[i] + data[i+1] + data[i+2]) / 3 < 65) dark++;
         }
         return dark > canvas.width * 0.92;
-      }
+      };
 
       while (top < bottom && isDarkRow(top)) top++;
       while (bottom > top && isDarkRow(bottom - 1)) bottom--;
 
-      const newHeight = bottom - top;
-
+      const newHeight = Math.max(1, bottom - top);
       const newCanvas = document.createElement("canvas");
-      const newCtx = newCanvas.getContext("2d");
-
-      newCanvas.width = canvas.width;
-      newCanvas.height = newHeight;
-
-      newCtx.drawImage(canvas, 0, top, canvas.width, newHeight, 0, 0, canvas.width, newHeight);
-
-      resolve(newCanvas.toDataURL("image/jpeg", 1));
+      newCanvas.width = canvas.width; newCanvas.height = newHeight;
+      newCanvas.getContext("2d").drawImage(canvas, 0, top, canvas.width, newHeight, 0, 0, canvas.width, newHeight);
+      
+      resolve(newCanvas.toDataURL("image/jpeg", 0.9));
     };
   });
 }
