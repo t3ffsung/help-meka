@@ -1,145 +1,139 @@
 let selectedFiles = [];
+let existingPdfBytes = null;
+let generatedPdfUrl = null;
 
-document.getElementById("imageInput").addEventListener("change", function (e) {
-    const newFiles = Array.from(e.target.files);
-    selectedFiles = selectedFiles.concat(newFiles);
-    updateImageCount();
-    e.target.value = ""; // reset so same file can be added again
+const preview = document.getElementById("preview");
+const progressBar = document.getElementById("progressBar");
+const downloadBtn = document.getElementById("downloadBtn");
+
+document.getElementById("imageInput").addEventListener("change", e => {
+  const files = Array.from(e.target.files);
+  selectedFiles.push(...files);
+  renderPreview();
+  e.target.value = "";
 });
 
-
-function updateImageCount() {
-    document.getElementById("imageCount").innerText =
-        "Total Images Selected: " + selectedFiles.length;
-}
-
+document.getElementById("existingPdf").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (file) {
+    existingPdfBytes = await file.arrayBuffer();
+    alert("Existing PDF loaded. New images will be appended.");
+  }
+});
 
 function clearImages() {
-    selectedFiles = [];
-    updateImageCount();
+  selectedFiles = [];
+  preview.innerHTML = "";
+  progressBar.style.width = "0%";
+  downloadBtn.style.display = "none";
+  generatedPdfUrl = null;
 }
 
+function renderPreview() {
+  preview.innerHTML = "";
+
+  selectedFiles.forEach((file, index) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement("div");
+      div.className = "preview-item";
+      div.draggable = true;
+      div.dataset.index = index;
+
+      div.innerHTML = `
+        <button class="remove-btn" onclick="removeImage(${index})">×</button>
+        <img src="${e.target.result}">
+      `;
+
+      addDragEvents(div);
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeImage(index) {
+  selectedFiles.splice(index, 1);
+  renderPreview();
+}
+
+function addDragEvents(element) {
+  element.addEventListener("dragstart", e => {
+    e.dataTransfer.setData("text/plain", element.dataset.index);
+  });
+
+  element.addEventListener("dragover", e => e.preventDefault());
+
+  element.addEventListener("drop", e => {
+    e.preventDefault();
+    const from = e.dataTransfer.getData("text/plain");
+    const to = element.dataset.index;
+
+    const moved = selectedFiles.splice(from, 1)[0];
+    selectedFiles.splice(to, 0, moved);
+    renderPreview();
+  });
+}
 
 async function generatePDF() {
-    const { jsPDF } = window.jspdf;
+  if (selectedFiles.length === 0) {
+    alert("Add images first.");
+    return;
+  }
 
-    if (selectedFiles.length === 0) {
-        alert("Select images first.");
-        return;
+  progressBar.style.width = "0%";
+  downloadBtn.style.display = "none";
+
+  const { PDFDocument } = PDFLib;
+  let pdfDoc;
+
+  if (existingPdfBytes) {
+    pdfDoc = await PDFDocument.load(existingPdfBytes);
+  } else {
+    pdfDoc = await PDFDocument.create();
+  }
+
+  for (let i = 0; i < selectedFiles.length; i++) {
+
+    const file = selectedFiles[i];
+    const bytes = await file.arrayBuffer();
+
+    let image;
+    if (file.type.includes("png")) {
+      image = await pdfDoc.embedPng(bytes);
+    } else {
+      image = await pdfDoc.embedJpg(bytes);
     }
 
-    let pdf;
-    let pageWidth;
-    let pageHeight;
+    const { width, height } = image.scale(1);
+    const page = pdfDoc.addPage([width, height]);
+    page.drawImage(image, { x: 0, y: 0, width, height });
 
-    for (let i = 0; i < selectedFiles.length; i++) {
+    progressBar.style.width = ((i + 1) / selectedFiles.length) * 100 + "%";
+  }
 
-        const imgData = await readFileAsDataURL(selectedFiles[i]);
-        const croppedData = await smartCrop(imgData);
-        const img = await loadImage(croppedData);
+  const pdfBytes = await pdfDoc.save();
 
-        if (i === 0) {
-            pageWidth = img.width;
-            pageHeight = img.height;
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  generatedPdfUrl = URL.createObjectURL(blob);
 
-            pdf = new jsPDF({
-                orientation: pageWidth > pageHeight ? "l" : "p",
-                unit: "px",
-                format: [pageWidth, pageHeight]
-            });
-        } else {
-            pdf.addPage([pageWidth, pageHeight],
-                pageWidth > pageHeight ? "l" : "p");
-        }
-
-        pdf.addImage(img, "JPEG", 0, 0, pageWidth, pageHeight);
-    }
-
-    pdf.save("converted.pdf");
+  downloadBtn.style.display = "inline-block";
+  progressBar.style.width = "100%";
 }
 
+function downloadPDF() {
+  if (!generatedPdfUrl) return;
 
-function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-        reader.readAsDataURL(file);
-    });
-}
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-
-function loadImage(src) {
-    return new Promise(resolve => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => resolve(img);
-    });
-}
-
-
-/* ---------- SMART CROP ---------- */
-
-function smartCrop(imageData) {
-    return new Promise(resolve => {
-        const img = new Image();
-        img.src = imageData;
-
-        img.onload = function () {
-
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-
-            canvas.width = img.width;
-            canvas.height = img.height;
-
-            ctx.drawImage(img, 0, 0);
-
-            const imageDataObj = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageDataObj.data;
-
-            const width = canvas.width;
-            const height = canvas.height;
-
-            let top = 0;
-            let bottom = height;
-
-            function isMostlyDarkRow(y) {
-                let darkPixels = 0;
-
-                for (let x = 0; x < width; x++) {
-                    const index = (y * width + x) * 4;
-
-                    const r = data[index];
-                    const g = data[index + 1];
-                    const b = data[index + 2];
-
-                    const brightness = (r + g + b) / 3;
-
-                    if (brightness < 60) darkPixels++;
-                }
-
-                return darkPixels > width * 0.9;
-            }
-
-            while (top < bottom && isMostlyDarkRow(top)) top++;
-            while (bottom > top && isMostlyDarkRow(bottom - 1)) bottom--;
-
-            const newHeight = bottom - top;
-
-            const croppedCanvas = document.createElement("canvas");
-            const croppedCtx = croppedCanvas.getContext("2d");
-
-            croppedCanvas.width = width;
-            croppedCanvas.height = newHeight;
-
-            croppedCtx.drawImage(
-                canvas,
-                0, top, width, newHeight,
-                0, 0, width, newHeight
-            );
-
-            resolve(croppedCanvas.toDataURL("image/jpeg", 1.0));
-        };
-    });
+  if (isSafari) {
+    window.open(generatedPdfUrl, "_blank");
+  } else {
+    const link = document.createElement("a");
+    link.href = generatedPdfUrl;
+    link.download = "converted.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
