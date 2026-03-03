@@ -1,9 +1,29 @@
+let selectedFiles = [];
+
+document.getElementById("imageInput").addEventListener("change", function (e) {
+    const newFiles = Array.from(e.target.files);
+    selectedFiles = selectedFiles.concat(newFiles);
+    updateImageCount();
+    e.target.value = ""; // reset so same file can be added again
+});
+
+
+function updateImageCount() {
+    document.getElementById("imageCount").innerText =
+        "Total Images Selected: " + selectedFiles.length;
+}
+
+
+function clearImages() {
+    selectedFiles = [];
+    updateImageCount();
+}
+
+
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
-    const input = document.getElementById("imageInput");
-    const files = Array.from(input.files);
 
-    if (files.length === 0) {
+    if (selectedFiles.length === 0) {
         alert("Select images first.");
         return;
     }
@@ -12,9 +32,9 @@ async function generatePDF() {
     let pageWidth;
     let pageHeight;
 
-    for (let i = 0; i < files.length; i++) {
+    for (let i = 0; i < selectedFiles.length; i++) {
 
-        const imgData = await readFileAsDataURL(files[i]);
+        const imgData = await readFileAsDataURL(selectedFiles[i]);
         const croppedData = await smartCrop(imgData);
         const img = await loadImage(croppedData);
 
@@ -58,7 +78,7 @@ function loadImage(src) {
 }
 
 
-/* ---------------- SMART CROP ---------------- */
+/* ---------- SMART CROP ---------- */
 
 function smartCrop(imageData) {
     return new Promise(resolve => {
@@ -96,12 +116,10 @@ function smartCrop(imageData) {
 
                     const brightness = (r + g + b) / 3;
 
-                    if (brightness < 60) {
-                        darkPixels++;
-                    }
+                    if (brightness < 60) darkPixels++;
                 }
 
-                return darkPixels > width * 0.9; 
+                return darkPixels > width * 0.9;
             }
 
             while (top < bottom && isMostlyDarkRow(top)) top++;
