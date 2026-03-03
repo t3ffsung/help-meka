@@ -1,8 +1,12 @@
-let pages = []; 
+let pages = [];
+let existingPdfBytes = null;
 let generatedUrl = null;
+
 const container = document.getElementById("pagesContainer");
 const progressBar = document.getElementById("progressBar");
 const downloadBtn = document.getElementById("downloadBtn");
+
+/* ---------------- IMAGE UPLOAD ---------------- */
 
 document.getElementById("imageInput").addEventListener("change", async e => {
   const files = Array.from(e.target.files);
@@ -16,22 +20,24 @@ document.getElementById("imageInput").addEventListener("change", async e => {
   e.target.value = "";
 });
 
+/* ---------------- PDF UPLOAD ---------------- */
+
 document.getElementById("existingPdf").addEventListener("change", async e => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const bytes = await file.arrayBuffer();
-  const pdfDoc = await PDFLib.PDFDocument.load(bytes);
+  existingPdfBytes = await file.arrayBuffer();
+  const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+  const total = pdfDoc.getPageCount();
 
-  const copied = await PDFLib.PDFDocument.create();
-  const copiedPages = await copied.copyPages(pdfDoc, pdfDoc.getPageIndices());
-
-  for (let p of copiedPages) {
-    pages.push({ type: "pdfPage", data: p });
+  for (let i = 0; i < total; i++) {
+    pages.push({ type: "pdf", index: i });
   }
 
   renderPages();
 });
+
+/* ---------------- RENDER ---------------- */
 
 function renderPages() {
   container.innerHTML = "";
@@ -47,13 +53,15 @@ function renderPages() {
       img.src = item.data;
       div.appendChild(img);
     } else {
-      div.innerHTML = "<span>Existing PDF Page</span>";
+      div.innerHTML = `<span>PDF Page ${item.index + 1}</span>`;
     }
 
     addDrag(div);
     container.appendChild(div);
   });
 }
+
+/* ---------------- DRAG ---------------- */
 
 function addDrag(el) {
   el.addEventListener("dragstart", e => {
@@ -73,6 +81,8 @@ function addDrag(el) {
   });
 }
 
+/* ---------------- GENERATE ---------------- */
+
 async function generatePDF() {
   if (pages.length === 0) return;
 
@@ -81,17 +91,33 @@ async function generatePDF() {
 
   const pdfDoc = await PDFLib.PDFDocument.create();
 
+  let sourcePdf = null;
+  if (existingPdfBytes) {
+    sourcePdf = await PDFLib.PDFDocument.load(existingPdfBytes);
+  }
+
   for (let i = 0; i < pages.length; i++) {
     const item = pages[i];
 
     if (item.type === "image") {
       const imageBytes = await fetch(item.data).then(res => res.arrayBuffer());
-      const img = await pdfDoc.embedJpg(imageBytes);
+
+      let img;
+      try {
+        img = await pdfDoc.embedJpg(imageBytes);
+      } catch {
+        img = await pdfDoc.embedPng(imageBytes);
+      }
+
       const { width, height } = img.scale(1);
       const page = pdfDoc.addPage([width, height]);
       page.drawImage(img, { x: 0, y: 0, width, height });
-    } else {
-      pdfDoc.addPage(item.data);
+
+    } else if (item.type === "pdf" && sourcePdf) {
+
+      const [copiedPage] = await pdfDoc.copyPages(sourcePdf, [item.index]);
+      pdfDoc.addPage(copiedPage);
+
     }
 
     progressBar.style.width = ((i + 1) / pages.length) * 100 + "%";
@@ -99,10 +125,12 @@ async function generatePDF() {
 
   const bytes = await pdfDoc.save();
   const blob = new Blob([bytes], { type: "application/pdf" });
-  generatedUrl = URL.createObjectURL(blob);
 
+  generatedUrl = URL.createObjectURL(blob);
   downloadBtn.style.display = "inline-block";
 }
+
+/* ---------------- DOWNLOAD ---------------- */
 
 function downloadPDF() {
   if (!generatedUrl) return;
@@ -115,14 +143,17 @@ function downloadPDF() {
   document.body.removeChild(link);
 }
 
+/* ---------------- CLEAR ---------------- */
+
 function clearAll() {
   pages = [];
+  existingPdfBytes = null;
   container.innerHTML = "";
   progressBar.style.width = "0%";
   downloadBtn.style.display = "none";
 }
 
-/* -------- SMART CROP -------- */
+/* ---------------- SMART CROP ---------------- */
 
 function smartCropFile(file) {
   return new Promise(resolve => {
@@ -162,7 +193,7 @@ function smartCrop(dataUrl) {
       }
 
       while (top < bottom && isDarkRow(top)) top++;
-      while (bottom > top && isDarkRow(bottom-1)) bottom--;
+      while (bottom > top && isDarkRow(bottom - 1)) bottom--;
 
       const newHeight = bottom - top;
 
