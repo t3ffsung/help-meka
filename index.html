@@ -1,47 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image to PDF Pro</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image to PDF Pro</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body>
 
 <div class="app">
-
-  <h1>Image to PDF Pro</h1>
+  <h1>Image to PDF Pro <span class="badge">MAX</span></h1>
   <p class="tagline">Drag. Insert. Reorder. Smart Crop.</p>
 
+  <div class="settings">
+    <label class="switch">
+      <input type="checkbox" id="enableCrop">
+      <span class="slider"></span>
+    </label>
+    <span>Enable Smart Crop (Removes dark edges)</span>
+  </div>
+
   <div class="upload-box">
-    <div>
-      <label>Select Images</label>
+    <div class="file-drop">
+      <label for="imageInput" class="custom-file-btn">📸 Select Images</label>
       <input type="file" id="imageInput" multiple accept="image/*">
     </div>
 
-    <div>
-      <label>Upload Existing PDF (Optional)</label>
-      <input type="file" id="existingPdf" accept="application/pdf">
+    <div class="file-drop">
+      <label for="existingPdf" class="custom-file-btn">📄 Add Existing PDF</label>
+      <input type="file" id="existingPdf" accept="application/pdf" multiple>
     </div>
   </div>
 
-  <h3>Pages Preview (Drag Images Between Pages)</h3>
+  <h3>Pages Preview</h3>
+  <p class="hint">Drag to reorder • Click ✕ to remove</p>
   <div id="pagesContainer" class="pages-container"></div>
 
   <div class="controls">
-    <button onclick="generatePDF()">Generate PDF</button>
-    <button onclick="clearAll()">Clear All</button>
-    <button id="downloadBtn" style="display:none;" onclick="downloadPDF()">Download PDF</button>
+    <button class="btn-primary" onclick="generatePDF()">Generate PDF</button>
+    <button class="btn-secondary" onclick="clearAll()">Clear All</button>
+    <button id="downloadBtn" class="btn-success" style="display:none;" onclick="downloadPDF()">⬇ Download</button>
   </div>
 
   <div class="progress-container">
     <div id="progressBar"></div>
   </div>
-
 </div>
 
-<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="script.js"></script>
-
 </body>
 </html>
