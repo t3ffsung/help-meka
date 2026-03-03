@@ -1,25 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Image to PDF Converter</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image to PDF Pro</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="container">
-    <h1>Image to PDF Converter</h1>
+<div class="app">
 
+  <h1>Image to PDF Pro</h1>
+  <p class="tagline">Fast. Smart. Unlimited. No uploads.</p>
+
+  <div class="upload-box">
     <input type="file" id="imageInput" multiple accept="image/*">
-    <br>
-    <button onclick="generatePDF()">Convert to PDF</button>
-    <button onclick="clearImages()">Clear All</button>
-
-    <p id="imageCount"></p>
-
+    <input type="file" id="existingPdf" accept="application/pdf">
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="script.js"></script>
+  <div id="preview" class="preview-grid"></div>
+
+  <div class="controls">
+    <button onclick="generatePDF()">Convert to PDF</button>
+    <button onclick="clearImages()">Clear All</button>
+    <button id="downloadBtn" style="display:none;" onclick="downloadPDF()">
+      Download PDF
+    </button>
+  </div>
+
+  <div class="progress-container">
+    <div id="progressBar"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html>
