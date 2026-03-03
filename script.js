@@ -1,43 +1,54 @@
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const input = document.getElementById("imageInput");
-    const files = input.files;
+    const files = Array.from(input.files);
 
     if (files.length === 0) {
         alert("Select images first.");
         return;
     }
 
+    // Keep original selection order
+    files.sort((a, b) => a.lastModified - b.lastModified);
+
     let pdf;
+    let pageWidth;
+    let pageHeight;
 
     for (let i = 0; i < files.length; i++) {
 
         const imgData = await readFileAsDataURL(files[i]);
         const croppedData = await cropBlackBorders(imgData);
 
-        const img = new Image();
-        img.src = croppedData;
+        const img = await loadImage(croppedData);
 
-        await new Promise(resolve => {
-            img.onload = function () {
+        if (i === 0) {
+            pageWidth = img.width;
+            pageHeight = img.height;
 
-                const imgWidth = img.width;
-                const imgHeight = img.height;
+            pdf = new jsPDF({
+                orientation: pageWidth > pageHeight ? "l" : "p",
+                unit: "px",
+                format: [pageWidth, pageHeight]
+            });
+        } else {
+            pdf.addPage([pageWidth, pageHeight],
+                pageWidth > pageHeight ? "l" : "p");
+        }
 
-                if (i === 0) {
-                    pdf = new jsPDF({
-                        orientation: imgWidth > imgHeight ? "l" : "p",
-                        unit: "px",
-                        format: [imgWidth, imgHeight]
-                    });
-                } else {
-                    pdf.addPage([imgWidth, imgHeight], imgWidth > imgHeight ? "l" : "p");
-                }
+        // Scale image to fit SAME page size
+        const ratio = Math.min(
+            pageWidth / img.width,
+            pageHeight / img.height
+        );
 
-                pdf.addImage(img, "JPEG", 0, 0, imgWidth, imgHeight);
-                resolve();
-            };
-        });
+        const imgWidth = img.width * ratio;
+        const imgHeight = img.height * ratio;
+
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+
+        pdf.addImage(img, "JPEG", x, y, imgWidth, imgHeight);
     }
 
     pdf.save("converted.pdf");
@@ -50,6 +61,15 @@ function readFileAsDataURL(file) {
         reader.onload = () => resolve(reader.result);
         reader.onerror = error => reject(error);
         reader.readAsDataURL(file);
+    });
+}
+
+
+function loadImage(src) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => resolve(img);
     });
 }
 
@@ -77,7 +97,7 @@ function cropBlackBorders(imageData) {
             function isBlackRow(y) {
                 for (let x = 0; x < canvas.width; x++) {
                     const index = (y * canvas.width + x) * 4;
-                    if (data[index] > 20 || data[index + 1] > 20 || data[index + 2] > 20)
+                    if (data[index] > 25 || data[index + 1] > 25 || data[index + 2] > 25)
                         return false;
                 }
                 return true;
@@ -86,7 +106,7 @@ function cropBlackBorders(imageData) {
             function isBlackColumn(x) {
                 for (let y = 0; y < canvas.height; y++) {
                     const index = (y * canvas.width + x) * 4;
-                    if (data[index] > 20 || data[index + 1] > 20 || data[index + 2] > 20)
+                    if (data[index] > 25 || data[index + 1] > 25 || data[index + 2] > 25)
                         return false;
                 }
                 return true;
