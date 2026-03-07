@@ -39,7 +39,9 @@
   <div id="pagesContainer" class="pages-container"></div>
 
   <div class="controls">
-    <button class="btn-primary" onclick="generatePDF()">Generate PDF</button>
+    <button class="btn-primary" onclick="generatePDF()">Generate Auto-Size PDF</button>
+    <button class="btn-primary" style="background: #8b5cf6;" onclick="generateFixedPDF()">Generate A4 PDF</button>
+    
     <button class="btn-secondary" onclick="clearAll()">Clear All</button>
     <button id="downloadBtn" class="btn-success" style="display:none;" onclick="downloadPDF()">⬇ Download</button>
   </div>
