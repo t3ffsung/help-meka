@@ -2,7 +2,7 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 let pages = [];
-let sourcePdfs = []; // Stores { id, bytes } to handle multiple PDFs
+let sourcePdfs = []; 
 let generatedUrl = null;
 let draggedIndex = null;
 
@@ -39,7 +39,6 @@ document.getElementById("existingPdf").addEventListener("change", async e => {
     const pdfId = sourcePdfs.length;
     sourcePdfs.push({ id: pdfId, bytes: bytes });
 
-    // Generate Thumbnails via PDF.js
     const loadingTask = pdfjsLib.getDocument({ data: bytes });
     const pdf = await loadingTask.promise;
     
@@ -117,7 +116,7 @@ function addDrag(el) {
   });
 }
 
-/* ---------------- GENERATE PDF ---------------- */
+/* ---------------- GENERATE PDF (ORIGINAL) ---------------- */
 async function generatePDF() {
   if (pages.length === 0) return;
   progressBar.style.width = "0%";
@@ -125,7 +124,6 @@ async function generatePDF() {
 
   const pdfDoc = await PDFLib.PDFDocument.create();
   
-  // Pre-load necessary PDFs
   const loadedPdfDocs = {};
   for (let item of pages) {
     if (item.type === "pdf" && !loadedPdfDocs[item.pdfId]) {
@@ -152,9 +150,66 @@ async function generatePDF() {
   }
 
   const bytes = await pdfDoc.save();
-  const blob = new Blob([bytes], { type: "application/pdf" });
+  finalizeDownload(bytes);
+}
 
-  // Fix Memory Leak
+/* ---------------- GENERATE PDF (FIXED A4 SIZE) ---------------- */
+async function generateFixedPDF() {
+  if (pages.length === 0) return;
+  progressBar.style.width = "0%";
+  downloadBtn.style.display = "none";
+
+  const pdfDoc = await PDFLib.PDFDocument.create();
+  
+  // Standard A4 dimensions in points
+  const A4_WIDTH = 595.28;
+  const A4_HEIGHT = 841.89;
+
+  for (let i = 0; i < pages.length; i++) {
+    const item = pages[i];
+    const page = pdfDoc.addPage([A4_WIDTH, A4_HEIGHT]);
+
+    if (item.type === "image") {
+      const imageBytes = await fetch(item.data).then(res => res.arrayBuffer());
+      let img = item.data.includes("image/png") ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
+      
+      // Calculate scale to fit A4 while maintaining aspect ratio
+      const imgDims = img.scale(1);
+      const scale = Math.min(A4_WIDTH / imgDims.width, A4_HEIGHT / imgDims.height);
+      const drawWidth = imgDims.width * scale;
+      const drawHeight = imgDims.height * scale;
+      
+      // Center the image
+      const x = (A4_WIDTH - drawWidth) / 2;
+      const y = (A4_HEIGHT - drawHeight) / 2;
+      
+      page.drawImage(img, { x, y, width: drawWidth, height: drawHeight });
+
+    } else if (item.type === "pdf") {
+      // Embed the PDF page so we can draw it onto our A4 canvas
+      const [embeddedPdfPage] = await pdfDoc.embedPdf(sourcePdfs[item.pdfId].bytes, [item.pageIndex]);
+      
+      const embDims = embeddedPdfPage.scale(1);
+      const scale = Math.min(A4_WIDTH / embDims.width, A4_HEIGHT / embDims.height);
+      const drawWidth = embDims.width * scale;
+      const drawHeight = embDims.height * scale;
+      
+      const x = (A4_WIDTH - drawWidth) / 2;
+      const y = (A4_HEIGHT - drawHeight) / 2;
+      
+      page.drawPage(embeddedPdfPage, { x, y, width: drawWidth, height: drawHeight });
+    }
+    
+    progressBar.style.width = ((i + 1) / pages.length) * 100 + "%";
+  }
+
+  const bytes = await pdfDoc.save();
+  finalizeDownload(bytes);
+}
+
+/* ---------------- HELPER TO FINALIZE DOWNLOAD ---------------- */
+function finalizeDownload(bytes) {
+  const blob = new Blob([bytes], { type: "application/pdf" });
   if (generatedUrl) URL.revokeObjectURL(generatedUrl);
   generatedUrl = URL.createObjectURL(blob);
   downloadBtn.style.display = "inline-block";
@@ -196,7 +251,7 @@ function smartCrop(dataUrl) {
           const i = (y * canvas.width + x) * 4;
           if ((data[i] + data[i+1] + data[i+2]) / 3 < 65) dark++;
         }
-        return dark > canvas.width * 0.70;
+        return dark > canvas.width * 0.70; 
       };
 
       while (top < bottom && isDarkRow(top)) top++;
