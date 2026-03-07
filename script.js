@@ -10,6 +10,7 @@ const container = document.getElementById("pagesContainer");
 const progressBar = document.getElementById("progressBar");
 const downloadBtn = document.getElementById("downloadBtn");
 const cropToggle = document.getElementById("enableCrop");
+const orientationSelect = document.getElementById("orientationSelect");
 
 /* ---------------- IMAGE UPLOAD ---------------- */
 document.getElementById("imageInput").addEventListener("change", async e => {
@@ -161,9 +162,12 @@ async function generateFixedPDF() {
 
   const pdfDoc = await PDFLib.PDFDocument.create();
   
+  // Read orientation from the dropdown
+  const isLandscape = orientationSelect.value === "landscape";
+  
   // Standard A4 dimensions in points
-  const A4_WIDTH = 595.28;
-  const A4_HEIGHT = 841.89;
+  const A4_WIDTH = isLandscape ? 841.89 : 595.28;
+  const A4_HEIGHT = isLandscape ? 595.28 : 841.89;
 
   for (let i = 0; i < pages.length; i++) {
     const item = pages[i];
@@ -173,20 +177,17 @@ async function generateFixedPDF() {
       const imageBytes = await fetch(item.data).then(res => res.arrayBuffer());
       let img = item.data.includes("image/png") ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
       
-      // Calculate scale to fit A4 while maintaining aspect ratio
       const imgDims = img.scale(1);
       const scale = Math.min(A4_WIDTH / imgDims.width, A4_HEIGHT / imgDims.height);
       const drawWidth = imgDims.width * scale;
       const drawHeight = imgDims.height * scale;
       
-      // Center the image
       const x = (A4_WIDTH - drawWidth) / 2;
       const y = (A4_HEIGHT - drawHeight) / 2;
       
       page.drawImage(img, { x, y, width: drawWidth, height: drawHeight });
 
     } else if (item.type === "pdf") {
-      // Embed the PDF page so we can draw it onto our A4 canvas
       const [embeddedPdfPage] = await pdfDoc.embedPdf(sourcePdfs[item.pdfId].bytes, [item.pageIndex]);
       
       const embDims = embeddedPdfPage.scale(1);
