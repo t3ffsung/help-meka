@@ -14,12 +14,22 @@
   <h1>Image to PDF Pro <span class="badge">MAX</span></h1>
   <p class="tagline">Drag. Insert. Reorder. Smart Crop.</p>
 
-  <div class="settings">
-    <label class="switch">
-      <input type="checkbox" id="enableCrop">
-      <span class="slider"></span>
-    </label>
-    <span>Enable Smart Crop (Removes dark edges)</span>
+  <div class="settings" style="flex-direction: column; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <label class="switch">
+        <input type="checkbox" id="enableCrop">
+        <span class="slider"></span>
+      </label>
+      <span>Enable Smart Crop (Removes dark edges)</span>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <label for="orientationSelect" style="font-weight: 500;">A4 Orientation:</label>
+      <select id="orientationSelect" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 14px; cursor: pointer;">
+        <option value="portrait">Portrait</option>
+        <option value="landscape">Landscape</option>
+      </select>
+    </div>
   </div>
 
   <div class="upload-box">
@@ -41,7 +51,6 @@
   <div class="controls">
     <button class="btn-primary" onclick="generatePDF()">Generate Auto-Size PDF</button>
     <button class="btn-primary" style="background: #8b5cf6;" onclick="generateFixedPDF()">Generate A4 PDF</button>
-    
     <button class="btn-secondary" onclick="clearAll()">Clear All</button>
     <button id="downloadBtn" class="btn-success" style="display:none;" onclick="downloadPDF()">⬇ Download</button>
   </div>
