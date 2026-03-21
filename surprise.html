@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Custom Study-Buddy System 🪴</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #F7F5F0; /* Warm cream */
+            --text-main: #4A453F; /* Earthy brown/grey */
+            --accent-green: #89A17F; /* Sage green */
+            --accent-orange: #D4A373; /* Muted terracotta */
+            --card-bg: #FFFFFF;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Nunito', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 40px 20px;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent-green);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-family: 'Caveat', cursive;
+            font-size: 1.5rem;
+            color: var(--accent-orange);
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid rgba(137, 161, 127, 0.2);
+        }
+
+        .intro-text {
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+        }
+
+        ol {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 12px;
+        }
+
+        .quote-box {
+            background-color: var(--bg-color);
+            border-left: 4px solid var(--accent-orange);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Caveat', cursive;
+            font-size: 1.3rem;
+            gap: 15px;
+        }
+
+        .copy-btn {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.8rem;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background-color: #728868;
+        }
+
+        .divider {
+            text-align: center;
+            color: var(--accent-green);
+            letter-spacing: 5px;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Your Custom Study Buddy</h1>
+        <div class="subtitle">The Blueprint for June Finals 🌿</div>
+
+        <div class="card intro-text">
+            <strong>To my favorite future architect,</strong><br><br>
+            I engineered a custom study-buddy system for your phone to get you through your June finals. Since I can’t physically fly over there to take away your phone when you get distracted, I built this logic blueprint for you instead.<br><br>
+            It takes less than 3 minutes to set up, and it will give you exactly the "strict but cute" motivation you asked for to manage your anxiety and crush these exams. Here is the blueprint to activate it. 🤍 <br><br>
+            <em>- Nitesh</em>
+        </div>
+
+        <div class="divider">✦ ✦ ✦</div>
+
+        <div class="card">
+            <h2>🛠️ Step 1: Build the Brain</h2>
+            <p>Open the <strong>Shortcuts</strong> app on your iPhone and tap the <strong>+</strong> at the top right to create a new shortcut. Search for and add these actions exactly in this order:</p>
+            <ol>
+                <li><strong>List:</strong> Add the "List" action. Copy and paste some quotes from the bottom of this page into the list items.</li>
+                <li><strong>Get Item from List:</strong> Add this action. Tap on the word "First Item" and change it to <strong>Random Item</strong>.</li>
+                <li><strong>Show Notification:</strong> Add this action. Tap the text and select your <strong>Item from List</strong> variable. Tap the arrow next to it and change the Title to: <em>Excuse me, future architect... 🌿</em></li>
+                <li><strong>Wait:</strong> Add this action. Set the timer to <strong>120 seconds</strong>.</li>
+                <li><strong>Show Alert:</strong> Add this action. Change the Title to: <em>🛑 Time's Up, Ma'am!</em> and the message to: <em>I am revoking your scrolling privileges. Drink some water and get back to your studio work!</em></li>
+                <li><strong>Go to Home Screen:</strong> Add this action. (This is the kicker!).</li>
+            </ol>
+            <p>At the very top, rename this shortcut to <strong>Study Nudge 🪴</strong> and hit Done.</p>
+        </div>
+
+        <div class="card">
+            <h2>⚡️ Step 2: Set the Trigger</h2>
+            <p>Now we just need to tell your phone when to use this brain!</p>
+            <ol>
+                <li>In the Shortcuts app, tap the <strong>Automation</strong> tab at the bottom.</li>
+                <li>Tap the <strong>+</strong> button at the top right, and select <strong>App</strong>.</li>
+                <li>Tap "Choose" and select your worst distraction apps (Instagram, TikTok, etc.).</li>
+                <li>Select <strong>Is Opened</strong> and make sure you check <strong>Run Immediately</strong>.</li>
+                <li>Tap Next, and select the <strong>Study Nudge 🪴</strong> shortcut you just built.</li>
+            </ol>
+            <p>That's it! Go open Instagram and see what happens. 😉</p>
+        </div>
+
+        <div class="divider">✦ ✦ ✦</div>
+
+        <div class="card">
+            <h2>📝 The Motivation Bank</h2>
+            <p>Copy these directly into your list in Step 1! Mix and match your favorites.</p>
+            
+            <div class="quote-box">
+                <span class="quote-text">Go girl!! You can do it! 🤎</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Just keep swimming! Be like Dory's enthusiasm 🐠</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Think about your future if you study now. ✨</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">God won't give you battles you can't win. It's okay, one step at a time :))</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Study now, reward yourself later. You can do it! 🪴</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Read. Read. And read please. 📚</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Help yourself, no one else will. (Except Nitesh cheering from afar!) 📣</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+
+            <div class="quote-box">
+                <span class="quote-text">Nitesh officially requests you to put the phone down. Your floor plans are waiting, beautiful. 🌿</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">You’re already my favorite architect. Now go prove it to your professors! 🤎</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Are you a structural support? Because you've been holding up my thoughts all day. Back to drafting! 😉</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">If you finish your studio work today, you get a virtual high-five and a very proud Nitesh. ☕</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">I know you're tired, but think of how amazing you'll look holding that architecture degree. Nitesh believes in you! 🎓</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">I'd offer to draw those elevations for you, but you're the genius here. I'm just the cheerleader. ✨</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Even thousands of miles away, I can tell you're distracted. Get back to work, beautiful! 👀</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Nitesh is officially sending you virtual coffee and strict instructions to focus! ☕🤎</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+
+            <div class="quote-box">
+                <span class="quote-text">Nitesh has revoked your scrolling privileges. Do not make me come over there! ✈️🛑</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Blink. Seriously, when did you last blink? Look away for 20 seconds. 🌼</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Step away from AutoCAD and stretch your back like a cat. 🐈</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Your designs are beautiful, but so is taking a 10-minute tea break. 🍵</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Breathe in for 5, hold for 5, breathe out for 5. The render will finish eventually. 🧘‍♀️</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Ma'am, unless this app is drawing your site plan, close it immediately! 📏</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Drink water. Adjust your posture. Okay, back to the drafting board. 💧</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">It’s okay to feel overwhelmed, but it’s not okay to scroll for another hour. One line at a time. 🪴</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">The deadline is June. The time to focus is right now. You've got this! ⏳</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+
+            <div class="quote-box">
+                <span class="quote-text">Trust me, your design is way better than a default Revit template. Keep going! 🖥️</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Are you an elevation? Because I'm looking forward to seeing you (after finals). Now go study! 📐</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Caffeine is a structural requirement at this point. Go refill your mug! ☕</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Don't make me call your studio professor... put the phone away! 📞</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">I know Revit is testing your patience right now, but you are stronger than the software. 💪</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Your rendering is loading... perfect time to stretch, NOT scroll. 🧘</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">Rome wasn't built in a day, but your floor plan is due in June. Get to it! 🏛️</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+            <div class="quote-box">
+                <span class="quote-text">A beautiful building needs a strong foundation. Go build yours! 🧱</span>
+                <button class="copy-btn" onclick="copyQuote(this)">Copy</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function copyQuote(button) {
+            const quoteText = button.previousElementSibling.innerText;
+            navigator.clipboard.writeText(quoteText).then(() => {
+                const originalText = button.innerText;
+                button.innerText = "Copied!";
+                button.style.backgroundColor = "#D4A373";
+                setTimeout(() => {
+                    button.innerText = originalText;
+                    button.style.backgroundColor = "#89A17F";
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
