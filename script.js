@@ -267,3 +267,8 @@ function smartCrop(dataUrl) {
     };
   });
 }
+
+/* ---------------- SURPRISE BUTTON ---------------- */
+function openSurprise() {
+  window.open("surprise.html", "SurpriseWindow", "width=700,height=800,top=100,left=100");
+}
